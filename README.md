@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly?ref=badge_shield)
 [![GoDoc](https://godoc.org/github.com/dragonflyoss/Dragonfly?status.svg)](https://godoc.org/github.com/dragonflyoss/Dragonfly)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2562/badge)](https://bestpractices.coreinfrastructure.org/en/projects/2562)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dragonflyoss/Dragonfly)](https://goreportcard.com/report/github.com/dragonflyoss/Dragonfly)
 [![Build Status](https://travis-ci.org/dragonflyoss/Dragonfly.svg?branch=master)](https://travis-ci.org/dragonflyoss/Dragonfly)
 [![CircleCI](https://circleci.com/gh/dragonflyoss/Dragonfly.svg?style=svg)](https://circleci.com/gh/dragonflyoss/Dragonfly)
@@ -22,7 +23,7 @@
 - [Documents](https://d7y.io/en-us/docs/overview/what_is_dragonfly.html)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
-- [Adoptors](./docs/README.md#who-has-adopted-dragonfly)
+- [Adoptors](./adopters.md)
 - [LICENSE](LICENSE)
 
 ## Introduction
@@ -31,19 +32,19 @@ Dragonfly is an open source intelligent P2P based image and file distribution sy
 
 - **Simple**: well-defined user-facing API (HTTP), non-invasive to all container engines;
 - **Efficient**: CDN support, P2P based file distribution to save enterprise bandwidth;
-- **Intelligent**: host level speed limit, intelligent flow control due to host dection;
-- **Secure**: block transmission encrytion, HTTPS connection support.
+- **Intelligent**: host level speed limit, intelligent flow control due to host detection;
+- **Secure**: block transmission encryption, HTTPS connection support.
 
-Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it is born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution and so on.
+Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it was born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution, and so on.
 
-Dragonfly is written in Java with the previous versions(< 0.3.0), and now is being refactored with Go.
+Dragonfly has finished refactoring in Golang. Now versions > 0.4.0 are totally in Golang, while those < 0.4.0 are in Java. We encourage adopters to try Golang version first, since Java versions will be out of support in the next few releases.
 
 ## Features
 
 In details, Dragonfly has the following features:
 
 - **P2P based file distribution**: Using P2P technology for file transmission, which can make full use of the bandwidth resources of each peer to improve download efficiency,  saves a lot of cross-IDC bandwidth, especially costly cross-board bandwidth
-- **Non-invasive support all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
+- **Non-invasive support for all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
 - **Host level speed limit**: Many downloading tools(wget/curl) only have rate limit for the current download task, but dragonfly also provides rate limit for the entire host.
 - **Passive CDN**: The CDN mechanism can avoid repetitive remote downloads.
 - **Strong consistency**: Dragonfly can guarantee that all downloaded files must be consistent even if users do not provide any check code(MD5).
@@ -59,9 +60,9 @@ In details, Dragonfly has the following features:
 
 For Dragonfly, no matter how many clients start the file downloading, the average downloading time is almost stable without increasement (12s in experiment, which means it only takes 12s in total for all client to finish downloading file/image).
 
-And for wget, the downloading time keeps increasing when you have more clients. As the amount of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
+And for wget, the downloading time keeps increasing when you have more clients. As the number of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
 
-The following table shows the testing environment and the graph shows the comprison result.
+The following table shows the testing environment and the graph shows the comparison result.
 
 |Test Environment |Statistics|
 |--------------------|-------------------|
@@ -86,9 +87,9 @@ Other active channels:
 - Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
 - Dingtalk Group(钉钉群)
 
-<p align="center">
-<img src=https://user-images.githubusercontent.com/9465626/50591975-2ac2ba00-0ecd-11e9-9e53-4c4d6a7dfc7d.jpg width="250">
-</p>
+<div align="center">
+  <img src="docs/images/df-dev-dingtalk.png" width="250" title="dingtalk">
+</div>
 
 ## Contributing
 

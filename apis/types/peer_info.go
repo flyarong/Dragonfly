@@ -6,8 +6,9 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -26,6 +27,10 @@ type PeerInfo struct {
 	//
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
+
+	// the time to join the P2P network
+	// Format: date-time
+	Created strfmt.DateTime `json:"created,omitempty"`
 
 	// host name of peer client node, as a valid RFC 1123 hostname.
 	// Min Length: 1
@@ -52,6 +57,10 @@ func (m *PeerInfo) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateCreated(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateHostName(formats); err != nil {
 		res = append(res, err)
 	}
@@ -73,6 +82,19 @@ func (m *PeerInfo) validateIP(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("IP", "body", "ipv4", m.IP.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PeerInfo) validateCreated(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Created) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("created", "body", "date-time", m.Created.String(), formats); err != nil {
 		return err
 	}
 

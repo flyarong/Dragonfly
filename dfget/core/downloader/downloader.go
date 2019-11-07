@@ -23,10 +23,11 @@ package downloader
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,7 +41,8 @@ type Downloader interface {
 // the given timeout duration.
 func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	if timeout <= 0 {
-		return fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
+		logrus.Warnf("invalid download timeout(%.3fs)", timeout.Seconds())
+		timeout = config.DefaultDownlodTimeout
 	}
 
 	var ch = make(chan error)
@@ -58,43 +60,19 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	return err
 }
 
-// ConvertHeaders converts headers from array type to map type for http request.
-func ConvertHeaders(headers []string) map[string]string {
-	if len(headers) == 0 {
-		return nil
-	}
-	hm := make(map[string]string)
-	for _, header := range headers {
-		kv := strings.SplitN(header, ":", 2)
-		if len(kv) != 2 {
-			continue
-		}
-		k, v := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
-		if v == "" {
-			continue
-		}
-		if _, in := hm[k]; in {
-			hm[k] = hm[k] + "," + v
-		} else {
-			hm[k] = v
-		}
-	}
-	return hm
-}
-
 // MoveFile moves a file from src to dst and
 // checks if the MD5 code is expected before that.
 func MoveFile(src string, dst string, expectMd5 string) error {
 	start := time.Now()
 	if expectMd5 != "" {
-		realMd5 := util.Md5Sum(src)
+		realMd5 := fileutils.Md5Sum(src)
 		logrus.Infof("compute raw md5:%s for file:%s cost:%.3fs", realMd5,
 			src, time.Since(start).Seconds())
 		if realMd5 != expectMd5 {
 			return fmt.Errorf("Md5NotMatch, real:%s expect:%s", realMd5, expectMd5)
 		}
 	}
-	err := util.MoveFile(src, dst)
+	err := fileutils.MoveFile(src, dst)
 	logrus.Infof("move src:%s to dst:%s result:%t cost:%.3f",
 		src, dst, err == nil, time.Since(start).Seconds())
 	return err

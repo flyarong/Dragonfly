@@ -22,13 +22,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/sirupsen/logrus"
 )
@@ -53,7 +57,9 @@ type BackDownloader struct {
 	cleaned      bool
 }
 
-// NewBackDownloader create BackDownloader
+var _ downloader.Downloader = &BackDownloader{}
+
+// NewBackDownloader creates a BackDownloader.
 func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackDownloader {
 	var (
 		taskID string
@@ -84,25 +90,29 @@ func (bd *BackDownloader) Run() error {
 		return err
 	}
 
-	util.Printer.Printf("download from source")
-	logrus.Infof("start download %s from the source station", path.Base(bd.Target))
+	printer.Printf("start download %s from the source station", filepath.Base(bd.Target))
+	logrus.Infof("start download %s from the source station", filepath.Base(bd.Target))
 
 	defer bd.Cleanup()
 
 	prefix := "backsource." + bd.cfg.Sign + "."
-	if f, err = ioutil.TempFile(path.Dir(bd.Target), prefix); err != nil {
+	if f, err = ioutil.TempFile(filepath.Dir(bd.Target), prefix); err != nil {
 		return err
 	}
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = util.HTTPGetWithHeaders(bd.URL, downloader.ConvertHeaders(bd.cfg.Header)); err != nil {
+	if resp, err = httputils.HTTPGetWithTLS(bd.URL, netutils.ConvertHeaders(bd.cfg.Header), 0, bd.cfg.Cacerts, bd.cfg.Insecure); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	if !bd.isSuccessStatus(resp.StatusCode) {
+		return fmt.Errorf("failed to download from source, response code:%d", resp.StatusCode)
+	}
+
 	buf := make([]byte, 512*1024)
-	reader := cutil.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
+	reader := limitreader.NewLimitReader(resp.Body, int64(bd.cfg.LocalLimit), bd.Md5 != "")
 	if _, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
@@ -122,8 +132,12 @@ func (bd *BackDownloader) Cleanup() {
 		return
 	}
 
-	if !cutil.IsEmptyStr(bd.tempFileName) {
-		cutil.DeleteFile(bd.tempFileName)
+	if !stringutils.IsEmptyStr(bd.tempFileName) {
+		fileutils.DeleteFile(bd.tempFileName)
 	}
 	bd.cleaned = true
+}
+
+func (bd *BackDownloader) isSuccessStatus(code int) bool {
+	return code < 400
 }

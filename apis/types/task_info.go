@@ -8,8 +8,9 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -21,25 +22,13 @@ type TaskInfo struct {
 	// ID of the task.
 	ID string `json:"ID,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
-	//
-	// Min Length: 1
-	CallSystem string `json:"callSystem,omitempty"`
-
 	// The status of the created task related to CDN functionality.
 	//
 	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]
 	CdnStatus string `json:"cdnStatus,omitempty"`
 
-	// tells whether it is a call from dfdaemon. dfdaemon is a long running
-	// process which works for container engines. It translates the image
-	// pulling request into raw requests into those dfget recganises.
-	//
-	Dfdaemon bool `json:"dfdaemon,omitempty"`
-
-	// The length of the file dfget requests to download in bytes.
+	// The length of the file dfget requests to download in bytes
+	// which including the header and the trailer of each piece.
 	//
 	FileLength int64 `json:"fileLength,omitempty"`
 
@@ -49,6 +38,10 @@ type TaskInfo struct {
 	// from source server as user's wish.
 	//
 	Headers map[string]string `json:"headers,omitempty"`
+
+	// The length of the source file in bytes.
+	//
+	HTTPFileLength int64 `json:"httpFileLength,omitempty"`
 
 	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
 	// identify different downloading task of remote source file. For example, if user A and user B uses
@@ -63,12 +56,6 @@ type TaskInfo struct {
 	// it will validate the source file with this md5 value to check whether this is a valid file.
 	//
 	Md5 string `json:"md5,omitempty"`
-
-	// path is used in one peer A for uploading functionality. When peer B hopes
-	// to get piece C from peer A, B must provide a URL for piece C.
-	// Then when creating a task in supernode, peer A must provide this URL in request.
-	//
-	Path string `json:"path,omitempty"`
 
 	// The size of pieces which is calculated as per the following strategy
 	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
@@ -85,6 +72,12 @@ type TaskInfo struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
+	// when supernode finishes downloading file/image from the source location,
+	// the md5 sum of the source file will be calculated as the value of the realMd5.
+	// And it will be used to compare with md5 value to check whether this is a valid file.
+	//
+	RealMd5 string `json:"realMd5,omitempty"`
+
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
@@ -95,10 +88,6 @@ type TaskInfo struct {
 func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCallSystem(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateCdnStatus(formats); err != nil {
 		res = append(res, err)
 	}
@@ -106,19 +95,6 @@ func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.CallSystem) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 
